@@ -22,28 +22,65 @@ class Asteroid {
 	constructor() {
 		this.x = Math.random() * gameCanvas.width; // Position aléatoire en X
 		this.y = 0; // Position de départ en haut
-		this.radius = 20; // Rayon de la boule
+		this.radius = Math.random() * 10 + 15; // Rayon de la météorite, varie
 		this.number = Math.floor(Math.random() * 10); // Nombre aléatoire entre 0 et 9
-		this.speed = Math.random() * 2 + 0.5; // Vitesse de la chute
+		this.speed = Math.random() * 2 + 1; // Vitesse de la chute
+		this.trail = []; // Liste pour la traînée de feu
+	}
+
+	drawTrail(ctx) {
+		for (let i = 0; i < this.trail.length; i++) {
+			const trail = this.trail[i];
+			ctx.beginPath();
+			ctx.arc(trail.x, trail.y, 5, 0, Math.PI * 2);
+			ctx.fillStyle = `rgba(255, 165, 0, ${1 - i / this.trail.length})`; // Dégradé orange/jaune
+			ctx.fill();
+		}
+	}
+
+	addTrail() {
+		this.trail.push({ x: this.x, y: this.y });
+		if (this.trail.length > 20) {
+			this.trail.shift(); // Limiter la longueur de la traînée
+		}
 	}
 
 	// Afficher la boule avec le numéro à l'intérieur
 	draw(ctx) {
+		this.drawTrail(ctx);
+
+		// Dessiner la météorite (forme irrégulière)
 		ctx.beginPath();
-		ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-		ctx.fillStyle = "white";
+		ctx.moveTo(this.x, this.y);
+
+		// Créer une forme irrégulière pour la météorite
+		for (let i = 0; i < 8; i++) {
+			const angle = (Math.PI * 2 * i) / 8;
+			const offsetX = Math.random() * 5 - 2.5; // Variabilité pour l'irrégularité
+			const offsetY = Math.random() * 5 - 2.5; // Variabilité pour l'irrégularité
+			ctx.lineTo(
+				this.x + Math.cos(angle) * (this.radius + offsetX),
+				this.y + Math.sin(angle) * (this.radius + offsetY)
+			);
+		}
+
+		ctx.closePath();
+		ctx.fillStyle = "white"; // Couleur de la météorite
 		ctx.fill();
-		ctx.stroke();
-		ctx.fillStyle = "black";
-		ctx.font = "16px Arial";
+
+		// Dessiner le numéro au centre de la météorite
+		ctx.font = `${this.radius / 2}px Arial`; // Taille du texte en fonction du rayon
 		ctx.textAlign = "center";
+		ctx.font = "24px Arial";
 		ctx.textBaseline = "middle";
-		ctx.fillText(this.number, this.x, this.y);
+		ctx.fillStyle = "black"; // Couleur du texte
+		ctx.fillText(this.number, this.x, this.y); // Dessiner le numéro au centre
 	}
 
 	// Mettre à jour la position de la boule
 	update() {
 		this.y += this.speed;
+		this.addTrail();
 	}
 
 	// Vérifier si la boule touche le bas de l'écran
